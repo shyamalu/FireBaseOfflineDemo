@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "741423192125",
+    "project_id": "fir-offline-901d9",
+    "storage_bucket": "fir-offline-901d9.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:741423192125:android:55d147770928311b8db254",
+        "android_client_info": {
+          "package_name": "org.chimple.myapplication"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "741423192125-kb0uvg8o7816c3tssspfkgebpt6rb2v0.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCv5QUVg-wxOw2AmWB02giCYOY2cfPKn0I"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "741423192125-kb0uvg8o7816c3tssspfkgebpt6rb2v0.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

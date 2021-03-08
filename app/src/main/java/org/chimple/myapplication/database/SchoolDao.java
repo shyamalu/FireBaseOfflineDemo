@@ -24,6 +24,10 @@ public interface SchoolDao {
     @Delete
     void delete(School school);
 
+    @Query("delete from SCHOOL where firebaseId = :firebaseId")
+    void deleteById(String firebaseId);
+
+
     @Query("SELECT COUNT(firebaseId) FROM SCHOOL WHERE firebaseId = :firebaseId LIMIT 1")
     Integer countSchoolById(String firebaseId);
 

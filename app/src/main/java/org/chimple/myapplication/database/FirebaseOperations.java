@@ -15,6 +15,8 @@ import com.google.firebase.firestore.FirebaseFirestoreSettings;
 import com.google.firebase.firestore.ListenerRegistration;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 import com.google.firebase.firestore.QuerySnapshot;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 
 import org.chimple.myapplication.model.School;
 import org.chimple.myapplication.model.Section;
@@ -130,8 +132,9 @@ public class FirebaseOperations {
                 }
         );
 
-        operations.loadAllSchools(schoolId);
-        operations.loadAllSectionsWithStudents(schoolId);
+        operations.convertSchoolToJson(schoolId);
+        operations.convertSectionsToJson(schoolId);
+        operations.convertStudentsForSchoolToJson(schoolId);
 
         return schoolListener;
     }
@@ -256,4 +259,7 @@ public class FirebaseOperations {
         return student;
     }
 
+    public void dbOperationResult(String result) {
+        Log.d(TAG, "JSON result:" + result);
+    }
 }

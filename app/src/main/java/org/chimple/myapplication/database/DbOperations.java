@@ -2,14 +2,14 @@ package org.chimple.myapplication.database;
 
 import android.util.Log;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+
 import org.chimple.myapplication.model.School;
 import org.chimple.myapplication.model.Section;
 import org.chimple.myapplication.model.Student;
 
-import java.lang.reflect.Array;
-import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 public class DbOperations {
     private static final Object LOCK = new Object();
@@ -37,8 +37,7 @@ public class DbOperations {
             @Override
             public void run() {
                 db.schoolDao().insertSchool(school);
-                School school1 = db.schoolDao().loadSchoolById(school.getFirebaseId());
-                Log.d(TAG, "school1: " + school1);
+                Log.d(TAG, "Upsert school: " + school);
             }
         });
     }
@@ -121,22 +120,66 @@ public class DbOperations {
         AppExecutors.getInstance().diskIO().execute(new Runnable() {
             @Override
             public void run() {
-                School school = db.schoolDao().loadSchoolById(firebaseId);
-                if (school != null) {
-                    db.schoolDao().delete(school);
-                    Log.d(TAG, "Delete School: " + school);
-                }
+                db.schoolDao().deleteById(firebaseId);
+                Log.d(TAG, "Delete School: " + firebaseId);
             }
         });
     }
 
-    public void loadSchoolById(String firebaseId) {
+    public void convertSchoolToJson(String firebaseId) {
         final School[] school = new School[1];
         AppExecutors.getInstance().diskIO().execute(new Runnable() {
             @Override
             public void run() {
                 school[0] = db.schoolDao().loadSchoolById(firebaseId);
                 Log.d(TAG, "School loaded" + school[0]);
+                if(school != null) {
+                    Gson gson = new GsonBuilder().create();
+                    String jsonSchool =  gson.toJson(school);
+                    FirebaseOperations.getInitializedInstance().dbOperationResult(jsonSchool);
+                }
+            }
+        });
+    }
+
+    public void convertSectionsToJson(String schoolId) {
+        AppExecutors.getInstance().diskIO().execute(new Runnable() {
+            @Override
+            public void run() {
+                List<Section> sections = db.sectionDao().loadAllSectionsBySchoolId(schoolId);
+                if(sections != null) {
+                    Gson gson = new GsonBuilder().create();
+                    String jsonSections =  gson.toJson(sections);
+                    FirebaseOperations.getInitializedInstance().dbOperationResult(jsonSections);
+                }
+            }
+        });
+    }
+
+    public void convertStudentsForSchoolToJson(String schoolId) {
+        AppExecutors.getInstance().diskIO().execute(new Runnable() {
+            @Override
+            public void run() {
+                List<Student> students = db.studentDao().loadAllStudentsBySchoolId(schoolId);
+                if(students != null) {
+                    Gson gson = new GsonBuilder().create();
+                    String jsonSections =  gson.toJson(students);
+                    FirebaseOperations.getInitializedInstance().dbOperationResult(jsonSections);
+                }
+            }
+        });
+    }
+
+    public void convertStudentsForSchoolAndSectionToJson(String schoolId, String sectionId) {
+        AppExecutors.getInstance().diskIO().execute(new Runnable() {
+            @Override
+            public void run() {
+                List<Student> students = db.studentDao().loadAllStudentsBySchoolIdAndSectionId(schoolId, sectionId);
+                if(students != null) {
+                    Gson gson = new GsonBuilder().create();
+                    String jsonSections =  gson.toJson(students);
+                    FirebaseOperations.getInitializedInstance().dbOperationResult(jsonSections);
+                }
             }
         });
     }
@@ -177,7 +220,7 @@ public class DbOperations {
         AppExecutors.getInstance().diskIO().execute(new Runnable() {
             @Override
             public void run() {
-                List<Section> s = db.sectionDao().loadAllSections(schoolId);
+                List<Section> s = db.sectionDao().loadAllSectionsBySchoolId(schoolId);
                 for (Section s1 : s) {
                     Log.d(TAG, "Section found:" + s1);
                     loadAllStudents(schoolId, s1.getFirebaseId());
@@ -190,7 +233,7 @@ public class DbOperations {
         AppExecutors.getInstance().diskIO().execute(new Runnable() {
             @Override
             public void run() {
-                List<Student> s = db.studentDao().loadAllStudents(schoolId, sectionId);
+                List<Student> s = db.studentDao().loadAllStudentsBySchoolIdAndSectionId(schoolId, sectionId);
                 for (Student s1 : s) {
                     Log.d(TAG, "Student found:" + s1);
                 }
@@ -202,7 +245,7 @@ public class DbOperations {
         AppExecutors.getInstance().diskIO().execute(new Runnable() {
             @Override
             public void run() {
-                List<Section> s = db.sectionDao().loadAllSections(schoolId);
+                List<Section> s = db.sectionDao().loadAllSectionsBySchoolId(schoolId);
                 for (Section s1 : s) {
                     FirebaseOperations.getInitializedInstance().addStudentListener(
                             schoolId, s1.getFirebaseId()

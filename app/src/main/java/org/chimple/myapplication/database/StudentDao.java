@@ -14,7 +14,10 @@ import static androidx.room.OnConflictStrategy.REPLACE;
 @Dao
 public interface StudentDao {
     @Query("SELECT * FROM STUDENT where sectionId = :sectionId and schoolId = :schoolId")
-    List<Student> loadAllStudents(String schoolId, String sectionId);
+    List<Student> loadAllStudentsBySchoolIdAndSectionId(String schoolId, String sectionId);
+
+    @Query("SELECT * FROM STUDENT where schoolId = :schoolId")
+    List<Student> loadAllStudentsBySchoolId(String schoolId);
 
     @Insert(onConflict = REPLACE)
     void insertStudent(Student Student);

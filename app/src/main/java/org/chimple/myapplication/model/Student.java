@@ -1,23 +1,50 @@
 package org.chimple.myapplication.model;
 
+import androidx.annotation.NonNull;
+import androidx.room.ColumnInfo;
+import androidx.room.Entity;
+import androidx.room.PrimaryKey;
+
 import java.util.Objects;
 
+@Entity(tableName = "STUDENT")
 public class Student {
+    @ColumnInfo(name = "age")
     private int age;
+
+    @ColumnInfo(name = "countryCode")
     private String countryCode;
+
+    @ColumnInfo(name = "gender")
     private String gender;
+
+    @ColumnInfo(name = "image")
     private String image;
+
+    @ColumnInfo(name = "link")
     private boolean link;
+
+    @ColumnInfo(name = "name")
     private String name;
+
+    @ColumnInfo(name = "password")
     private String password;
+
+    @ColumnInfo(name = "phoneNumber")
     private String phoneNumber;
+
+    @ColumnInfo(name = "progressId")
     private String progressId;
-    private String id;
+
+    @NonNull
+    @PrimaryKey
+    private String firebaseId;
 
     public Student() {
     }
 
-    public Student(int age, String countryCode, String gender, String image, boolean link, String name, String password, String phoneNumber, String progressId) {
+    public Student(String firebaseId, int age, String countryCode, String gender, String image, boolean link, String name, String password, String phoneNumber, String progressId) {
+        this.firebaseId = firebaseId;
         this.age = age;
         this.countryCode = countryCode;
         this.gender = gender;
@@ -101,12 +128,12 @@ public class Student {
         this.progressId = progressId;
     }
 
-    public String getId() {
-        return id;
+    public String getFirebaseId() {
+        return firebaseId;
     }
 
-    public void setId(String id) {
-        this.id = id;
+    public void setFirebaseId(String firebaseId) {
+        this.firebaseId = firebaseId;
     }
 
     @Override
@@ -123,12 +150,12 @@ public class Student {
                 Objects.equals(password, student.password) &&
                 Objects.equals(phoneNumber, student.phoneNumber) &&
                 Objects.equals(progressId, student.progressId) &&
-                id.equals(student.id);
+                firebaseId.equals(student.firebaseId);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(age, countryCode, gender, image, link, name, password, phoneNumber, progressId, id);
+        return Objects.hash(age, countryCode, gender, image, link, name, password, phoneNumber, progressId, firebaseId);
     }
 
     @Override
@@ -143,7 +170,7 @@ public class Student {
                 ", password='" + password + '\'' +
                 ", phoneNumber='" + phoneNumber + '\'' +
                 ", progressId='" + progressId + '\'' +
-                ", id='" + id + '\'' +
+                ", firebaseId='" + firebaseId + '\'' +
                 '}';
     }
 }

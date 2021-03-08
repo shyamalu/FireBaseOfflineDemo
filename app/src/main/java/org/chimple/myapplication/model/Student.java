@@ -36,6 +36,12 @@ public class Student {
     @ColumnInfo(name = "progressId")
     private String progressId;
 
+    @ColumnInfo(name = "sectionId")
+    private String sectionId;
+
+    @ColumnInfo(name = "schoolId")
+    private String schoolId;
+
     @NonNull
     @PrimaryKey
     private String firebaseId;
@@ -43,7 +49,8 @@ public class Student {
     public Student() {
     }
 
-    public Student(String firebaseId, int age, String countryCode, String gender, String image, boolean link, String name, String password, String phoneNumber, String progressId) {
+    public Student(String firebaseId, String schoolId, int age, String countryCode, String gender, String image, boolean link, String name, String password, String phoneNumber, String progressId,
+                   String sectionId) {
         this.firebaseId = firebaseId;
         this.age = age;
         this.countryCode = countryCode;
@@ -54,6 +61,8 @@ public class Student {
         this.password = password;
         this.phoneNumber = phoneNumber;
         this.progressId = progressId;
+        this.sectionId = sectionId;
+        this.schoolId = schoolId;
     }
 
     public int getAge() {
@@ -136,6 +145,23 @@ public class Student {
         this.firebaseId = firebaseId;
     }
 
+
+    public String getSectionId() {
+        return sectionId;
+    }
+
+    public void setSectionId(String sectionId) {
+        this.sectionId = sectionId;
+    }
+
+    public String getSchoolId() {
+        return schoolId;
+    }
+
+    public void setSchoolId(String schoolId) {
+        this.schoolId = schoolId;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -150,12 +176,14 @@ public class Student {
                 Objects.equals(password, student.password) &&
                 Objects.equals(phoneNumber, student.phoneNumber) &&
                 Objects.equals(progressId, student.progressId) &&
+                sectionId.equals(student.sectionId) &&
+                schoolId.equals(student.schoolId) &&
                 firebaseId.equals(student.firebaseId);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(age, countryCode, gender, image, link, name, password, phoneNumber, progressId, firebaseId);
+        return Objects.hash(age, countryCode, gender, image, link, name, password, phoneNumber, progressId, sectionId, schoolId, firebaseId);
     }
 
     @Override
@@ -170,6 +198,8 @@ public class Student {
                 ", password='" + password + '\'' +
                 ", phoneNumber='" + phoneNumber + '\'' +
                 ", progressId='" + progressId + '\'' +
+                ", sectionId='" + sectionId + '\'' +
+                ", schoolId='" + schoolId + '\'' +
                 ", firebaseId='" + firebaseId + '\'' +
                 '}';
     }

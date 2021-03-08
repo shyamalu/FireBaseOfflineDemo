@@ -13,8 +13,8 @@ import static androidx.room.OnConflictStrategy.REPLACE;
 
 @Dao
 public interface SectionDao {
-    @Query("SELECT * FROM Section")
-    List<Section> loadAllSections();
+    @Query("SELECT * FROM SECTION where schoolId = :schoolId")
+    List<Section> loadAllSections(String schoolId);
 
     @Insert(onConflict = REPLACE)
     void insertSection(Section Section);

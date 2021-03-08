@@ -49,7 +49,7 @@ public class DbOperations {
             public void run() {
                 db.sectionDao().insertSection(section);
                 Section Section1 = db.sectionDao().loadSectionById(section.getFirebaseId());
-                Log.d(TAG, "Section1: " + Section1);
+                Log.d(TAG, "Upsert Section: " + Section1);
             }
         });
     }
@@ -60,7 +60,7 @@ public class DbOperations {
             public void run() {
                 db.studentDao().insertStudent(student);
                 Student s1 = db.studentDao().loadStudentById(student.getFirebaseId());
-                Log.d(TAG, "updated Student: " + s1);
+                Log.d(TAG, "Upsert Student: " + s1);
             }
         });
     }
@@ -80,7 +80,9 @@ public class DbOperations {
             @Override
             public void run() {
                 db.sectionDao().deleteById(firebaseId);
-                Log.d(TAG, "Delete Section: " + firebaseId);
+                Log.d(TAG, "Deleted Section: " + firebaseId);
+                db.studentDao().deleteBySectionId(firebaseId);
+                Log.d(TAG, "Deleted All students by section Id: " + firebaseId);
             }
         });
     }
@@ -159,11 +161,11 @@ public class DbOperations {
         });
     }
 
-    public void loadAllSchools() {
+    public void loadAllSchools(String firebaseId) {
         AppExecutors.getInstance().diskIO().execute(new Runnable() {
             @Override
             public void run() {
-                List<School> schools = db.schoolDao().loadAllSchools();
+                List<School> schools = db.schoolDao().loadAllSchools(firebaseId);
                 for (School s : schools) {
                     Log.d(TAG, "School found:" + s);
                 }
@@ -171,23 +173,24 @@ public class DbOperations {
         });
     }
 
-    public void loadAllSections() {
+    public void loadAllSectionsWithStudents(String schoolId) {
         AppExecutors.getInstance().diskIO().execute(new Runnable() {
             @Override
             public void run() {
-                List<Section> s = db.sectionDao().loadAllSections();
+                List<Section> s = db.sectionDao().loadAllSections(schoolId);
                 for (Section s1 : s) {
                     Log.d(TAG, "Section found:" + s1);
+                    loadAllStudents(schoolId, s1.getFirebaseId());
                 }
             }
         });
     }
 
-    public void loadAllStudents() {
+    public void loadAllStudents(String schoolId, String sectionId) {
         AppExecutors.getInstance().diskIO().execute(new Runnable() {
             @Override
             public void run() {
-                List<Student> s = db.studentDao().loadAllStudents();
+                List<Student> s = db.studentDao().loadAllStudents(schoolId, sectionId);
                 for (Student s1 : s) {
                     Log.d(TAG, "Student found:" + s1);
                 }
@@ -195,14 +198,14 @@ public class DbOperations {
         });
     }
 
-    public void initFirebaseSyncForAllCachedStudents() {
+    public void initFirebaseSyncForAllCachedStudents(String schoolId) {
         AppExecutors.getInstance().diskIO().execute(new Runnable() {
             @Override
             public void run() {
-                List<Section> s = db.sectionDao().loadAllSections();
+                List<Section> s = db.sectionDao().loadAllSections(schoolId);
                 for (Section s1 : s) {
                     FirebaseOperations.getInitializedInstance().addStudentListener(
-                            "000Test", s1.getFirebaseId()
+                            schoolId, s1.getFirebaseId()
                     );
                 }
             }

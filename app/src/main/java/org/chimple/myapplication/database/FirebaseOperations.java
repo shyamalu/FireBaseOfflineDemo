@@ -16,7 +16,6 @@ import com.google.firebase.firestore.ListenerRegistration;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 import com.google.firebase.firestore.QuerySnapshot;
 
-import org.chimple.myapplication.MainActivity;
 import org.chimple.myapplication.model.School;
 import org.chimple.myapplication.model.Section;
 import org.chimple.myapplication.model.Student;
@@ -43,9 +42,8 @@ public class FirebaseOperations {
     private ListenerRegistration schoolListener;
     private ListenerRegistration sectionListener;
     private Map<String, ListenerRegistration> studentListeners = new HashMap<String, ListenerRegistration>();
-    private Map<String, Section> sections = new HashMap<String, Section>();
-    private Map<String, Student> students = new HashMap<String, Student>();
-    private Map<String, Map<String, Student>> sectionStudents = new HashMap<String, Map<String, Student>>();
+
+    public static String SCHOOL_ID = "000Test";
 
     private FirebaseOperations(DbOperations operations) {
         this.ref = this;
@@ -61,7 +59,7 @@ public class FirebaseOperations {
                 .build();
         db.setFirestoreSettings(settings);
 
-        this.schoolListener = this.initSchoolSync("000Test");
+        this.schoolListener = this.initSchoolSync(SCHOOL_ID);
     }
 
     public static FirebaseOperations getInitializedInstance() {
@@ -84,7 +82,7 @@ public class FirebaseOperations {
             FirebaseOperations.ref.sectionListener = FirebaseOperations.ref.initSectionSync(schoolId);
         }
 
-        operations.initFirebaseSyncForAllCachedStudents();
+        operations.initFirebaseSyncForAllCachedStudents(schoolId);
 
         this.schoolRef = db.collection(SCHOOL_COLLECTION)
                 .document(schoolId);
@@ -124,17 +122,17 @@ public class FirebaseOperations {
                                     FirebaseOperations.ref.sectionListener = null;
                                 }
                                 if (source.equalsIgnoreCase(SERVER)) {
-                                    operations.deleteSchoolById("000Test");
+                                    operations.deleteSchoolById(SCHOOL_ID);
                                 }
                             }
-                        } else {
-                            operations.loadAllSchools();
-                            operations.loadAllSections();
-                            operations.loadAllStudents();
                         }
                     }
                 }
         );
+
+        operations.loadAllSchools(schoolId);
+        operations.loadAllSectionsWithStudents(schoolId);
+
         return schoolListener;
     }
 
@@ -167,11 +165,6 @@ public class FirebaseOperations {
                                 String source = snapshots.getMetadata().isFromCache() ?
                                         CACHE : SERVER;
                                 Log.d(TAG, "Received Sections using :" + source);
-                                for (String id : FirebaseOperations.ref.sections.keySet()) {
-                                    Section s = FirebaseOperations.ref.sections.get(id);
-                                    Log.d(TAG, "found section: " + id + " " + s);
-                                }
-
                             }
                         }
                     }
@@ -183,33 +176,17 @@ public class FirebaseOperations {
     private void removeSection(String schoolId, QueryDocumentSnapshot snapshot) {
         Section section = snapshot.toObject(Section.class);
         section.setFirebaseId(snapshot.getId());
-        if (FirebaseOperations.ref.sections.get(section.getFirebaseId()) != null) {
-            FirebaseOperations.ref.sections.remove(section);
-            FirebaseOperations.ref.operations.deleteSectionById(section.getFirebaseId());
-
-            FirebaseOperations.ref.removeStudentListener(schoolId, section.getFirebaseId());
-            if (FirebaseOperations.ref.sectionStudents != null) {
-                Map students = FirebaseOperations.ref.sectionStudents.get(section.getFirebaseId());
-                if (students != null) {
-                    students.clear();
-                    Log.d(TAG, "clear all students for section:" + section.getFirebaseId());
-                }
-
-                FirebaseOperations.ref.sectionStudents.remove(section.getFirebaseId());
-                Log.d(TAG, "clear section students for section:" + section.getFirebaseId());
-            }
-        }
+        FirebaseOperations.ref.removeStudentListener(schoolId, section.getFirebaseId());
+        FirebaseOperations.ref.operations.deleteSectionById(section.getFirebaseId());
     }
 
     private Section createSection(String schoolId, QueryDocumentSnapshot snapshot) {
         Section section = snapshot.toObject(Section.class);
         section.setFirebaseId(snapshot.getId());
-
-        FirebaseOperations.ref.sections.put(section.getFirebaseId(), section);
-        Log.d(TAG, "created/updated section:" + section.getFirebaseId());
-
+        section.setSchoolId(schoolId);
         FirebaseOperations.ref.addStudentListener(schoolId, section.getFirebaseId());
         FirebaseOperations.ref.operations.upsertSection(section);
+        Log.d(TAG, "created/updated section:" + section.getFirebaseId());
         return section;
     }
 
@@ -243,16 +220,14 @@ public class FirebaseOperations {
                             switch (dc.getType()) {
                                 case ADDED:
                                     Log.d(TAG, "New Student: " + dc.getDocument().getData());
-                                    FirebaseOperations.ref.createStudent(sectionId, dc.getDocument());
+                                    FirebaseOperations.ref.createStudent(schoolId, sectionId, dc.getDocument());
                                     break;
                                 case MODIFIED:
                                     Log.d(TAG, "Modified Student: " + dc.getDocument().getData());
-                                    FirebaseOperations.ref.createStudent(sectionId, dc.getDocument());
+                                    FirebaseOperations.ref.createStudent(schoolId, sectionId, dc.getDocument());
                                     break;
                                 case REMOVED:
-                                    FirebaseOperations.ref.students.remove(dc.getDocument().getId());
                                     FirebaseOperations.ref.operations.deleteStudentById(dc.getDocument().getId());
-                                    FirebaseOperations.ref.removeStudentListener(schoolId, sectionId);
                                     Log.d(TAG, "Removed Student: " + dc.getDocument().getData());
                                     break;
                             }
@@ -263,10 +238,6 @@ public class FirebaseOperations {
                                 String source = snapshots.getMetadata().isFromCache() ?
                                         CACHE : SERVER;
                                 Log.d(TAG, "Received student using :" + source);
-                                for (String id : FirebaseOperations.ref.students.keySet()) {
-                                    Student s = FirebaseOperations.ref.students.get(id);
-                                    Log.d(TAG, "found student: " + id + " " + s);
-                                }
                             }
                         }
                     }
@@ -275,12 +246,12 @@ public class FirebaseOperations {
         return studentListener;
     }
 
-    private Student createStudent(String sectionId, QueryDocumentSnapshot s) {
+    private Student createStudent(String schoolId, String sectionId, QueryDocumentSnapshot s) {
         Student student = s.toObject(Student.class);
         student.setFirebaseId(s.getId());
-        FirebaseOperations.ref.students.put(student.getFirebaseId(), student);
+        student.setSchoolId(schoolId);
+        student.setSectionId(sectionId);
         FirebaseOperations.ref.operations.upsertStudent(student);
-        FirebaseOperations.ref.sectionStudents.put(sectionId, FirebaseOperations.ref.students);
         Log.d(TAG, "created student: " + student.getFirebaseId());
         return student;
     }

@@ -23,17 +23,21 @@ public class Section {
     @ColumnInfo(name = "name")
     private String name;
 
+    @ColumnInfo(name = "schoolId")
+    private String schoolId;
+
     @Ignore
     private DocumentReference school;
 
     public Section() {
     }
 
-    public Section(String firebaseId, String image, String name, DocumentReference school) {
+    public Section(String firebaseId, String schoolId, String image, String name, DocumentReference school) {
         this.firebaseId = firebaseId;
         this.image = image;
         this.name = name;
         this.school = school;
+        this.schoolId = schoolId;
     }
 
     public String getImage() {
@@ -68,20 +72,29 @@ public class Section {
         return this.firebaseId;
     }
 
+    public String getSchoolId() {
+        return schoolId;
+    }
+
+    public void setSchoolId(String schoolId) {
+        this.schoolId = schoolId;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         Section section = (Section) o;
-        return Objects.equals(firebaseId, section.firebaseId) &&
+        return firebaseId.equals(section.firebaseId) &&
                 Objects.equals(image, section.image) &&
                 Objects.equals(name, section.name) &&
+                schoolId.equals(section.schoolId) &&
                 Objects.equals(school, section.school);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(firebaseId, image, name, school);
+        return Objects.hash(firebaseId, image, name, schoolId, school);
     }
 
     @Override
@@ -90,6 +103,7 @@ public class Section {
                 "firebaseId='" + firebaseId + '\'' +
                 ", image='" + image + '\'' +
                 ", name='" + name + '\'' +
+                ", schoolId='" + schoolId + '\'' +
                 ", school=" + school +
                 '}';
     }

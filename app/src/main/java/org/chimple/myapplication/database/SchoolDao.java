@@ -15,8 +15,8 @@ import static androidx.room.OnConflictStrategy.REPLACE;
 
 @Dao
 public interface SchoolDao {
-    @Query("SELECT * FROM SCHOOL")
-    List<School> loadAllSchools();
+    @Query("SELECT * FROM SCHOOL where firebaseId = :firebaseId")
+    List<School> loadAllSchools(String firebaseId);
 
     @Insert(onConflict = REPLACE)
     void insertSchool(School school);

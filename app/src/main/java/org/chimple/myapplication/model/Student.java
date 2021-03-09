@@ -1,23 +1,71 @@
 package org.chimple.myapplication.model;
 
+import android.content.ContentValues;
+
+import androidx.annotation.NonNull;
+import androidx.room.ColumnInfo;
+import androidx.room.Entity;
+import androidx.room.Ignore;
+import androidx.room.PrimaryKey;
+
+import java.util.Map;
 import java.util.Objects;
 
+@Entity(tableName = "STUDENT")
 public class Student {
+    @ColumnInfo(name = "age")
     private int age;
+
+    @ColumnInfo(name = "countryCode")
     private String countryCode;
+
+    @ColumnInfo(name = "gender")
     private String gender;
+
+    @ColumnInfo(name = "image")
     private String image;
+
+    @ColumnInfo(name = "link")
     private boolean link;
+
+    @ColumnInfo(name = "name")
     private String name;
+
+    @ColumnInfo(name = "password")
     private String password;
+
+    @ColumnInfo(name = "phoneNumber")
     private String phoneNumber;
+
+    @ColumnInfo(name = "progressId")
     private String progressId;
-    private String id;
+
+    @ColumnInfo(name = "sectionId")
+    private String sectionId;
+
+    @ColumnInfo(name = "schoolId")
+    private String schoolId;
+
+    @ColumnInfo(name = "profile_info")
+    private String profileInfo;
+
+    @ColumnInfo(name = "is_synced")
+    private boolean isSynced;
+
+
+    @Ignore
+    private String profile;
+
+    @NonNull
+    @PrimaryKey
+    private String firebaseId;
 
     public Student() {
     }
 
-    public Student(int age, String countryCode, String gender, String image, boolean link, String name, String password, String phoneNumber, String progressId) {
+    public Student(String firebaseId, String schoolId, int age, String countryCode, String gender, String image, boolean link, String name, String password, String phoneNumber, String progressId,
+                   String sectionId) {
+        this.firebaseId = firebaseId;
         this.age = age;
         this.countryCode = countryCode;
         this.gender = gender;
@@ -27,6 +75,8 @@ public class Student {
         this.password = password;
         this.phoneNumber = phoneNumber;
         this.progressId = progressId;
+        this.sectionId = sectionId;
+        this.schoolId = schoolId;
     }
 
     public int getAge() {
@@ -101,12 +151,45 @@ public class Student {
         this.progressId = progressId;
     }
 
-    public String getId() {
-        return id;
+    public String getFirebaseId() {
+        return firebaseId;
     }
 
-    public void setId(String id) {
-        this.id = id;
+    public void setFirebaseId(String firebaseId) {
+        this.firebaseId = firebaseId;
+    }
+
+
+    public String getSectionId() {
+        return sectionId;
+    }
+
+    public void setSectionId(String sectionId) {
+        this.sectionId = sectionId;
+    }
+
+    public String getSchoolId() {
+        return schoolId;
+    }
+
+    public void setSchoolId(String schoolId) {
+        this.schoolId = schoolId;
+    }
+
+    public String getProfileInfo() {
+        return profileInfo;
+    }
+
+    public void setProfileInfo(String profileInfo) {
+        this.profileInfo = profileInfo;
+    }
+
+    public boolean isSynced() {
+        return isSynced;
+    }
+
+    public void setSynced(boolean synced) {
+        isSynced = synced;
     }
 
     @Override
@@ -116,6 +199,7 @@ public class Student {
         Student student = (Student) o;
         return age == student.age &&
                 link == student.link &&
+                isSynced == student.isSynced &&
                 Objects.equals(countryCode, student.countryCode) &&
                 Objects.equals(gender, student.gender) &&
                 Objects.equals(image, student.image) &&
@@ -123,12 +207,15 @@ public class Student {
                 Objects.equals(password, student.password) &&
                 Objects.equals(phoneNumber, student.phoneNumber) &&
                 Objects.equals(progressId, student.progressId) &&
-                id.equals(student.id);
+                Objects.equals(sectionId, student.sectionId) &&
+                Objects.equals(schoolId, student.schoolId) &&
+                Objects.equals(profileInfo, student.profileInfo) &&
+                firebaseId.equals(student.firebaseId);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(age, countryCode, gender, image, link, name, password, phoneNumber, progressId, id);
+        return Objects.hash(age, countryCode, gender, image, link, name, password, phoneNumber, progressId, sectionId, schoolId, profileInfo, isSynced, firebaseId);
     }
 
     @Override
@@ -143,7 +230,11 @@ public class Student {
                 ", password='" + password + '\'' +
                 ", phoneNumber='" + phoneNumber + '\'' +
                 ", progressId='" + progressId + '\'' +
-                ", id='" + id + '\'' +
+                ", sectionId='" + sectionId + '\'' +
+                ", schoolId='" + schoolId + '\'' +
+                ", profileInfo='" + profileInfo + '\'' +
+                ", isSynced=" + isSynced +
+                ", firebaseId='" + firebaseId + '\'' +
                 '}';
     }
 }

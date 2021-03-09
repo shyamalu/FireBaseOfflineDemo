@@ -2,6 +2,11 @@ package org.chimple.myapplication.database;
 
 import android.util.Log;
 
+import androidx.annotation.NonNull;
+
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.firebase.firestore.DocumentReference;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
@@ -9,7 +14,12 @@ import org.chimple.myapplication.model.School;
 import org.chimple.myapplication.model.Section;
 import org.chimple.myapplication.model.Student;
 
+import java.util.HashMap;
 import java.util.List;
+
+import static org.chimple.myapplication.database.Helper.SCHOOL_COLLECTION;
+import static org.chimple.myapplication.database.Helper.SECTION_COLLECTION;
+import static org.chimple.myapplication.database.Helper.STUDENT_COLLECTION;
 
 public class DbOperations {
     private static final Object LOCK = new Object();
@@ -133,9 +143,9 @@ public class DbOperations {
             public void run() {
                 school[0] = db.schoolDao().loadSchoolById(firebaseId);
                 Log.d(TAG, "School loaded" + school[0]);
-                if(school != null) {
+                if (school != null) {
                     Gson gson = new GsonBuilder().create();
-                    String jsonSchool =  gson.toJson(school);
+                    String jsonSchool = gson.toJson(school);
                     FirebaseOperations.getInitializedInstance().dbOperationResult(jsonSchool);
                 }
             }
@@ -147,9 +157,9 @@ public class DbOperations {
             @Override
             public void run() {
                 List<Section> sections = db.sectionDao().loadAllSectionsBySchoolId(schoolId);
-                if(sections != null) {
+                if (sections != null) {
                     Gson gson = new GsonBuilder().create();
-                    String jsonSections =  gson.toJson(sections);
+                    String jsonSections = gson.toJson(sections);
                     FirebaseOperations.getInitializedInstance().dbOperationResult(jsonSections);
                 }
             }
@@ -161,9 +171,9 @@ public class DbOperations {
             @Override
             public void run() {
                 List<Student> students = db.studentDao().loadAllStudentsBySchoolId(schoolId);
-                if(students != null) {
+                if (students != null) {
                     Gson gson = new GsonBuilder().create();
-                    String jsonSections =  gson.toJson(students);
+                    String jsonSections = gson.toJson(students);
                     FirebaseOperations.getInitializedInstance().dbOperationResult(jsonSections);
                 }
             }
@@ -175,9 +185,9 @@ public class DbOperations {
             @Override
             public void run() {
                 List<Student> students = db.studentDao().loadAllStudentsBySchoolIdAndSectionId(schoolId, sectionId);
-                if(students != null) {
+                if (students != null) {
                     Gson gson = new GsonBuilder().create();
-                    String jsonSections =  gson.toJson(students);
+                    String jsonSections = gson.toJson(students);
                     FirebaseOperations.getInitializedInstance().dbOperationResult(jsonSections);
                 }
             }
@@ -241,6 +251,54 @@ public class DbOperations {
         });
     }
 
+    public void updateSync(String firebaseId, boolean sync) {
+        AppExecutors.getInstance().diskIO().execute(new Runnable() {
+            @Override
+            public void run() {
+                db.studentDao().updateSync(firebaseId, sync);
+            }
+        });
+    }
+
+    public void updateAllNonSyncedProfiles(String schoolId) {
+        AppExecutors.getInstance().diskIO().execute(new Runnable() {
+            @Override
+            public void run() {
+                List<Student> unSyncProfiles = db.studentDao().findAllNonSyncedProfiles(schoolId);
+                for (Student s : unSyncProfiles) {
+                    DocumentReference student = FirebaseOperations.getInitializedInstance().getDb().collection(SCHOOL_COLLECTION + "/" + schoolId + "/" + SECTION_COLLECTION + "/" + s.getSectionId() + "/" + STUDENT_COLLECTION).document(s.getFirebaseId());
+                    HashMap updatedProfileMap = new Gson().fromJson(s.getProfileInfo(), HashMap.class);
+                    student.update("profile", updatedProfileMap)
+                            .addOnSuccessListener(new OnSuccessListener<Void>() {
+                                @Override
+                                public void onSuccess(Void aVoid) {
+                                    updateSync(s.getFirebaseId(), true);
+                                    Log.d(TAG, "DocumentSnapshot successfully updated! Sync Completed for:" + s.getFirebaseId());
+                                }
+                            })
+                            .addOnFailureListener(new OnFailureListener() {
+                                @Override
+                                public void onFailure(@NonNull Exception e) {
+                                    Log.w(TAG, "Error updating document Sync Failed for :" + s.getFirebaseId(), e);
+                                    updateSync(s.getFirebaseId(), false);
+                                }
+                            });
+                }
+            }
+        });
+    }
+
+    public void updateStudentProfile(String profile, String firebaseId) {
+        AppExecutors.getInstance().diskIO().execute(new Runnable() {
+            @Override
+            public void run() {
+                db.studentDao().updateStudentProfile(profile, firebaseId, false);
+                Log.d(TAG, "Updated student Profile:" + profile + " for:" + firebaseId);
+            }
+        });
+    }
+
+
     public void initFirebaseSyncForAllCachedStudents(String schoolId) {
         AppExecutors.getInstance().diskIO().execute(new Runnable() {
             @Override
@@ -254,5 +312,4 @@ public class DbOperations {
             }
         });
     }
-
 }

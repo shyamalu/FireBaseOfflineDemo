@@ -19,6 +19,10 @@ public interface StudentDao {
     @Query("SELECT * FROM STUDENT where schoolId = :schoolId")
     List<Student> loadAllStudentsBySchoolId(String schoolId);
 
+    @Query("SELECT * FROM STUDENT where schoolId = :schoolId and is_synced = 0")
+    List<Student> findAllNonSyncedProfiles(String schoolId);
+
+
     @Insert(onConflict = REPLACE)
     void insertStudent(Student Student);
 
@@ -37,5 +41,11 @@ public interface StudentDao {
 
     @Query("SELECT * FROM Student WHERE firebaseId = :firebaseId LIMIT 1")
     Student loadStudentById(String firebaseId);
+
+    @Query("update STUDENT set profile_info = :profile, is_synced = :synced WHERE firebaseId = :firebaseId")
+    void updateStudentProfile(String profile, String firebaseId, boolean synced);
+
+    @Query("update STUDENT set is_synced = :sync WHERE firebaseId = :firebaseId")
+    void updateSync(String firebaseId, boolean sync);
 
 }
